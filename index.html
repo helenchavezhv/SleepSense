@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SleepSense - Performance Score</title>
+    <style>
+        :root {
+            --primary: #764ba2;
+            --secondary: #667eea;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --bg: #f4f7f6;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .header {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .header h1 { margin: 0; color: var(--primary); font-size: 28px; }
+        .header p { margin: 5px 0 0; opacity: 0.7; font-size: 14px; }
+
+        .input-section { flex: 1.2; min-width: 320px; }
+        .results-section { 
+            flex: 1; 
+            min-width: 300px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            justify-content: center;
+            border-left: 1px solid #eee;
+            padding-left: 20px;
+        }
+
+        .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .form-group { flex: 1; }
+        label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #666; text-transform: uppercase; }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            box-sizing: border-box;
+            transition: all 0.3s;
+            background: #fff;
+        }
+        input:focus { border-color: var(--primary); outline: none; background: #fdfbff; }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+        }
+        .btn:hover { background: #5e3a8a; transform: translateY(-2px); }
+        .btn:active { transform: scale(0.98); }
+
+        /* Score Ring Styling */
+        .ring-container { position: relative; width: 200px; height: 200px; margin-bottom: 25px; }
+        svg { transform: rotate(-90deg); width: 200px; height: 200px; }
+        circle {
+            fill: none;
+            stroke-width: 15;
+            stroke-linecap: round;
+        }
+        .bg-circle { stroke: #f0f0f0; }
+        .progress-circle {
+            stroke: var(--success);
+            stroke-dasharray: 565.48; /* 2 * PI * 90 */
+            stroke-dashoffset: 565.48;
+            transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.5s;
+        }
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .score-val { font-size: 42px; font-weight: 800; color: #333; }
+        .score-label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 1px; }
+
+        .insight-box {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            margin-bottom: 12px;
+            border-left: 5px solid #ddd;
+            background: #f8fafc;
+            display: none;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .results-section { border-left: none; padding-left: 0; border-top: 1px solid #eee; padding-top: 30px; }
+            .container { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🌙 SleepSense AI</h1>
+        <p>Advanced Biometric Interpretation</p>
+    </div>
+
+    <div class="input-section">
+        <form id="sleepForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Total Sleep (min)</label>
+                    <input type="number" id="actualSleep" placeholder="480" required>
+                </div>
+                <div class="form-group">
+                    <label>Time in Bed (min)</label>
+                    <input type="number" id="timeInBed" placeholder="510" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Deep Sleep (min)</label>
+                    <input type="number" id="deep" placeholder="70" required>
+                </div>
+                <div class="form-group">
+                    <label>REM Sleep (min)</label>
+                    <input type="number" id="rem" placeholder="90" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Core Sleep (min)</label>
+                    <input type="number" id="core" placeholder="320" required>
+                </div>
+                <div class="form-group">
+                    <label>Awake Phase (min)</label>
+                    <input type="number" id="awake" placeholder="15" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Daily Activity (Steps)</label>
+                    <input type="number" id="steps" placeholder="10000" required>
+                </div>
+                <div class="form-group">
+                    <label>Screen Time (min)</label>
+                    <input type="number" id="screen" placeholder="120" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn">Analyze Performance ✨</button>
+        </form>
+    </div>
+
+    <div class="results-section">
+        <div class="ring-container">
+            <svg>
+                <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
+                <circle id="progressCircle" class="progress-circle" cx="100" cy="100" r="90"></circle>
+            </svg>
+            <div class="score-text">
+                <div id="scoreVal" class="score-val">--</div>
+                <div class="score-label">Efficiency</div>
+            </div>
+        </div>
+
+        <div id="insight1" class="insight-box"></div>
+        <div id="insight2" class="insight-box"></div>
+        <div id="insight3" class="insight-box"></div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('sleepForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // 1. Inputs
+        const actual = parseFloat(document.getElementById('actualSleep').value) || 0;
+        const bed = parseFloat(document.getElementById('timeInBed').value) || 1;
+        const deep = parseFloat(document.getElementById('deep').value) || 0;
+        const rem = parseFloat(document.getElementById('rem').value) || 0;
+        const core = parseFloat(document.getElementById('core').value) || 0;
+        const awake = parseFloat(document.getElementById('awake').value) || 0;
+        const steps = parseFloat(document.getElementById('steps').value) || 0;
+        const screen = parseFloat(document.getElementById('screen').value) || 0;
+
+        // 2. High-Sensitivity Logic
+        
+        // Base Efficiency (Actual vs Bed)
+        let score = (actual / bed) * 100;
+
+        // Penalty 1: Drastic Awake penalty
+        const awakeRatio = awake / bed;
+        if (awakeRatio > 0.05) {
+            score -= (awakeRatio * 100) * 1.5; // Scaled penalty
+        }
+
+        // Penalty 2: Deep Sleep Deficiency
+        const deepRatio = (deep / actual) * 100;
+        if (deepRatio < 15) {
+            score -= (15 - deepRatio) * 2.5; 
+        }
+
+        // Penalty 3: Blue Light Friction
+        if (screen > 120) {
+            score -= (screen - 120) / 8;
+        }
+
+        // Penalty 4: REM Balance
+        const remRatio = (rem / actual) * 100;
+        if (remRatio < 20) {
+            score -= (20 - remRatio) * 1.2;
+        }
+
+        // Bonus: Activity Reward
+        if (steps > 10000) score += 5;
+
+        // Final clamp
+        const finalScore = Math.max(0, Math.min(100, Math.round(score)));
+
+        // 3. UI Update - Ring
+        const circle = document.getElementById('progressCircle');
+        const scoreDisplay = document.getElementById('scoreVal');
+        
+        const circumference = 2 * Math.PI * 90; 
+        const offset = circumference - (finalScore / 100) * circumference;
+        circle.style.strokeDashoffset = offset;
+
+        // NEW COLOR RANGES: 
+        // 100-80: Green | 79-50: Orange | 49-0: Red
+        let color = '#e74c3c'; // Default Red
+        if (finalScore >= 80) {
+            color = '#2ecc71'; // Green
+        } else if (finalScore >= 50) {
+            color = '#f39c12'; // Orange
+        }
+        
+        circle.style.stroke = color;
+        scoreDisplay.innerText = finalScore + '%';
+        scoreDisplay.style.color = color;
+
+        // 4. Insights
+        const i1 = document.getElementById('insight1');
+        const i2 = document.getElementById('insight2');
+        const i3 = document.getElementById('insight3');
+
+        i1.style.display = 'block';
+        i2.style.display = 'block';
+        i3.style.display = 'block';
+
+        // Efficiency & Awake Insight
+        if(awakeRatio > 0.15) {
+            i1.style.borderLeftColor = '#e74c3c';
+            i1.innerHTML = `<strong>Severe Fragmentation:</strong> You were awake for ${Math.round(awakeRatio*100)}% of your time in bed. Efficiency is critically compromised.`;
+        } else if (finalScore >= 80) {
+            i1.style.borderLeftColor = '#2ecc71';
+            i1.innerHTML = "<strong>Excellent Efficiency:</strong> You optimized your sleep window perfectly.";
+        } else {
+            i1.style.borderLeftColor = '#f39c12';
+            i1.innerHTML = "<strong>Moderate Efficiency:</strong> Restlessness detected. Try limiting fluids or lights before bed.";
+        }
+
+        // Sleep Phases Insight
+        if(deepRatio < 15 || remRatio < 20) {
+            i2.style.borderLeftColor = '#e74c3c';
+            i2.innerHTML = `<strong>Phase Imbalance:</strong> Deep (${deepRatio.toFixed(0)}%) or REM (${remRatio.toFixed(0)}%) stages are below recovery targets.`;
+        } else {
+            i2.style.borderLeftColor = '#2ecc71';
+            i2.innerHTML = "<strong>Quality Phases:</strong> Balanced distribution of restorative sleep stages achieved.";
+        }
+
+        // Behavior Insight
+        if(screen > 180) {
+            i3.style.borderLeftColor = '#e74c3c';
+            i3.innerHTML = `<strong>Digital Friction:</strong> High screen time (${screen}m) is likely suppressing melatonin production and score.`;
+        } else if (steps < 7000) {
+            i3.style.borderLeftColor = '#f39c12';
+            i3.innerHTML = `<strong>Activity Note:</strong> ${steps} steps is low. Increasing activity helps create deeper sleep pressure.`;
+        } else {
+            i3.style.borderLeftColor = '#2ecc71';
+            i3.innerHTML = "<strong>Lifestyle Support:</strong> Your daily activity levels are helping your sleep score stay healthy.";
+        }
+    });
+</script>
+
+</body>
+</html>
